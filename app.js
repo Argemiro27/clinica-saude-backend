@@ -1,10 +1,14 @@
 const express = require('express');
 const mysql = require('mysql');
-const cors = require('cors'); // Importe a biblioteca cors
+const cors = require('cors'); 
+const ejs = require('ejs'); 
+const path = require('path'); 
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views')); 
 
 // Configure MySQL
 const db = mysql.createConnection({
@@ -48,6 +52,10 @@ app.get('/tables', (req, res) => {
     });
 });
 
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
 app.listen(5001, () => {
-    console.log('API está rodando na porta 3000.');
+    console.log('API está rodando na porta 5001.');
 });

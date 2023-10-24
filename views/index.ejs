@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout com Sidebar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar vh-100 h-100 overflow-auto">
+                <div class="position-sticky">
+                    <ul id="table-list" class="nav flex-column">
+                        <!-- Tabelas serão adicionadas aqui via JavaScript -->
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Conteúdo Principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 vh-100">
+                <h1>Conteúdo Principal</h1>
+                <p>Este é o conteúdo principal da sua página.</p>
+
+                <h2>Consulta SQL</h2>
+                <textarea id="sql-query" rows="4" cols="50" placeholder="Insira sua consulta SQL aqui"></textarea>
+                <br>
+                <button id="execute-query" class="btn btn-primary">Executar Consulta</button>
+
+                <div id="query-results">
+                    <!-- Os resultados da consulta serão exibidos aqui em uma tabela -->
+                    <table class="table table-bordered" id="result-table">
+                        <thead>
+                            <!-- As colunas da tabela serão preenchidas via JavaScript -->
+                        </thead>
+                        <tbody>
+                            <!-- As linhas da tabela serão preenchidas via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+
+        <script>
+            // Função para buscar as tabelas e adicioná-las ao sidebar
+            async function fetchAndDisplayTables() {
+                try {
+                    const response = await fetch('/tables');
+                    const data = await response.json();
+                    const tableList = document.getElementById('table-list');
+
+                    if (response.ok) {
+                        data.tables.forEach(table => {
+                            const tableItem = document.createElement('li');
+                            const tableLink = document.createElement('a');
+                            tableLink.className = 'nav-link';
+                            tableLink.href = `#`; // Adicione a URL apropriada se necessário
+                            tableLink.textContent = table;
+                            tableItem.appendChild(tableLink);
+                            tableList.appendChild(tableItem);
+                        });
+                    } else {
+                        console.error('Erro ao buscar tabelas:', data.error);
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar tabelas:', error);
+                }
+            }
+
+            fetchAndDisplayTables(); // Chame a função para buscar as tabelas ao carregar a página.
+            async function executeSQLQuery() {
+                const query = document.getElementById('sql-query').value;
+                const resultsTable = document.getElementById('result-table');
+                resultsTable.innerHTML = ''; // Limpa a tabela de resultados
+
+                try {
+                    const response = await fetch('/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ query })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        const columns = data.result[0] ? Object.keys(data.result[0]) : [];
+                        const tableHead = resultsTable.createTHead();
+                        const headRow = tableHead.insertRow();
+
+                        // Cria as colunas da tabela de resultados
+                        columns.forEach(columnName => {
+                            const th = document.createElement('th');
+                            th.textContent = columnName;
+                            headRow.appendChild(th);
+                        });
+
+                        const tableBody = resultsTable.createTBody();
+
+                        data.result.forEach(row => {
+                            const newRow = tableBody.insertRow();
+                            columns.forEach(columnName => {
+                                const cell = newRow.insertCell();
+                                cell.textContent = row[columnName];
+                            });
+                        });
+                    } else {
+                        console.error('Erro na consulta SQL:', data.error);
+                    }
+                } catch (error) {
+                    console.error('Erro na consulta SQL:', error);
+                }
+            }
+
+            document.getElementById('execute-query').addEventListener('click', executeSQLQuery);
+            fetchAndDisplayTables();
+
+        </script>
+    </div>
+</body>
+
+</html>
