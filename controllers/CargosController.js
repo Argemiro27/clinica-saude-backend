@@ -1,21 +1,17 @@
-
-const db = require('../config/database');
-
+const Cargo = require('../models/cargos');
 
 const CargosController = {
-    getCargos: (req, res) => {
-        const query = 'SELECT id_cargo, nom_cargo FROM cargos';
-
-        db.query(query, (err, results) => {
-            if (err) {
-                console.error('Erro ao executar a consulta:', err);
-                res.status(500).send('Erro interno do servidor');
-                return;
-            }
-    
-            res.json(results);
-        });
+    getCargos: async (req, res) => {
+        try {
+            const cargos = await Cargo.findAll({
+                attributes: ['id_cargo', 'nom_cargo']
+            });
+            res.json(cargos);
+        } catch (error) {
+            console.error('Erro ao buscar os cargos:', error);
+            res.status(500).send('Erro interno do servidor');
+        }
     }
-  };
-  
-  module.exports = CargosController;
+};
+
+module.exports = CargosController;
