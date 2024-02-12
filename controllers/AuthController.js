@@ -1,83 +1,33 @@
-const jwt = require("jsonwebtoken");
+
 const bcrypt = require("bcrypt");
 const db = require("../config/database");
-const { promisify } = require("util");
-const crypto = require("crypto");
+const AuthService = require("../services/Auth/AuthService");
 
-// Função para gerar uma chave secreta aleatória
-const generateSecret = () => {
-  return crypto.randomBytes(64).toString("hex");
-};
-
-// Gera a chave secreta automaticamente
-const secret = generateSecret();
-
-const generateToken = (user) => {
-  return jwt.sign(
-    {
-      userId: user.id_usuario,
-      email: user.email,
-    },
-    secret,
-    { expiresIn: "7d" }
-  );
-};
+const authService = new AuthService();
 
 const AuthController = {
   login: async (req, res) => {
-    
     try {
-      
       const { email, senha } = req.body;
-      
-      if (!email || !senha) {
-        return res
-          .status(400)
-          .json({ error: "Email e senha são obrigatórios" });
-      }
-      console.log("Senha informada:", senha);
-
-      // Verifica se o usuário com o email fornecido existe
-      const query = `SELECT * FROM usuarios WHERE email = ?`;
-
-      // Executar a consulta para obter as informações do usuário
-      const results = await promisify(db.query).bind(db)(query, [email]);
-
-      console.log(results);
-
-      // Verificar se o usuário com o email fornecido existe
-      if (results.length === 0) {
-        return res.status(404).json({ error: "Usuário não encontrado" });
-      }
-
-      // Verificar a senha
-      const usuario = results[0];
-
-      const senhaMatch = await bcrypt.compare(senha, usuario.senha);
-
-      if (!senhaMatch) {
-        return res.status(401).json({ error: "Credenciais inválidas" });
-      }
-
-      // Geração do Token JWT
-      const token = generateToken(usuario);
-
-      // Autenticação bem-sucedida
-      console.log("Login bem-sucedido!");
-      console.log("Token de autenticação:", token);
+      const { token, usuario, dadosEmpresa } = await authService.login(email, senha);
       res.json({
         success: true,
         usuario: {
           id: usuario.id_usuario,
-          nome: usuario.nome_usuario,
+          nome: usuario.nome,
           email: usuario.email,
         },
+        empresa: {
+          dadosEmpresa,
+        },
+        token
       });
     } catch (error) {
-      console.error(error);
+      console.error("Erro durante o login:", error.message);
       res.status(500).json({ error: "Erro interno do servidor" });
     }
   },
+  
 
   registerUsuario: async (req, res) => {
     const {

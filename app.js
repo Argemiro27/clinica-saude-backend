@@ -1,5 +1,6 @@
 const empresasRoutes = require('./router/empresas.js');
 const cargosRoutes = require('./router/cargos.js');
+const usuariosRoutes = require('./router/usuarios.js');
 const authRoutes = require('./router/auth');
 const express = require('express');
 const cors = require('cors');
@@ -14,6 +15,8 @@ app.use('/empresas', empresasRoutes);
 
 // Endpoint to perform SELECT query
 app.use('/cargos', cargosRoutes);
+
+app.use('/usuarios', usuariosRoutes)
 
 app.use('/auth', authRoutes);
 
